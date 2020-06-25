@@ -1,4 +1,4 @@
-def repository = 'https://git.enigmacamp.com/enigma-camp/class-b/batch-2/final-project/gembala-squad/backend-ternak-kos'
+def repository = 'https://github.com/pepifitrohul/ternakkos'
 def credentialsId = "git"
 def dockerDev = [:]
 def dockerDevHost = "10.10.11.15"
@@ -50,6 +50,23 @@ pipeline {
                 ){
                     sh "docker login -u ${USERNAME} -p ${PASSWORD} http://${dockerRegistry}"
                     sh "docker push ${appEnvVariable}"
+                }
+            }
+        }
+
+        stage('Deploy Image') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'docker-dev', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                    script {
+                        dockerDev.name = "docker-dev"
+                        dockerDev.host = "${dockerDevHost}"
+                        dockerDev.user = "${USERNAME}"
+                        dockerDev.password = "${PASSWORD}"
+                        dockerDev.allowAnyHosts = true
+                    }
+
+                    sshPut remote: dockerDev, from: './docker-compose.yml', into: "./${imageName}-docker-compose.yml"
+                    sshCommand remote: dockerDev, command: "export ${appEnvVariableName}=${appEnvVariable}; docker-compose -f ./${imageName}-docker-compose.yml up -d"
                 }
             }
         }
