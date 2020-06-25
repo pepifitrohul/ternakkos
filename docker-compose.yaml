@@ -1,0 +1,39 @@
+version: "3"
+volumes:
+  uploads:
+    external: false
+  database:
+    external: false
+networks:
+  services: {}
+services:
+  api-service:
+    image: 10.10.11.6:8083/ternakkos-pep
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - 1000:1000
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/db_qanda?useSSL=false
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: password
+    volumes:
+      - uploads:/uploads
+    networks:
+      - services
+  db:
+    image: mysql:5.7
+    ports:
+      - "3306:3306"
+    restart: always
+    environment:
+      MYSQL_DATABASE: db_ternakkos
+      MYSQL_USER: root
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: password
+    volumes:
+      - db-data:/var/lib/mysql
+    networks:
+      - services
